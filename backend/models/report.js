@@ -12,15 +12,22 @@ const reportSchema = new mongoose.Schema({
     },
     weakAreas:{
         type:[String],
-        required:true
+       
+    },
+    fluency:{
+        type:String,
     },
     strongAreas:{
         type:[String],
-        required:true
+       
+    },
+    communication:{
+        type:String,
+        
     },
     improvements:{
         type:[String],
-        required:true
+        
     },
     tips:{
         type:[String],

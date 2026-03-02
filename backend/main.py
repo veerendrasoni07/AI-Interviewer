@@ -4,7 +4,7 @@ import json
 load_dotenv()
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint,ChatHuggingFace
-from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser,StrOutputParser
 from pydantic import BaseModel
 
 
@@ -16,17 +16,28 @@ llm = HuggingFaceEndpoint(
 model = ChatHuggingFace(llm=llm)
 
 class Report(BaseModel):
-    tech_stack:str
+    techStack:str
     accuracy:int
-    weak_areas:list[str]
-    strong_areas:list[str]
+    weakAreas:list[str]
+    fluency:str
+    strongAreas:list[str]
     improvements:list[str]
+    communication:str
     tips:list[str]
 
 parser = PydanticOutputParser(pydantic_object=Report)
+strParser = StrOutputParser()
+
+
+
 template = PromptTemplate(
-    template="""You are an expert who analyse the complete conversation that 
-    given to you and based on that you generate the best possible report in the specified format \n {context} \n {format_instruction} """,
+    template="""
+    You are an expert who analyse the complete conversation that 
+    given to you and based on that you generate the best possible report in the specified format and You must ALWAYS return a valid JSON in the specified format.
+    If the conversation is short, make reasonable assumptions.
+    Do not return null for any field.
+    Accuracy must be an integer between 0 and 100.. \n {context} \n {format_instruction} 
+    """,
     input_variables=['context'],
     partial_variables= {"format_instruction":parser.get_format_instructions()}
 )
@@ -34,6 +45,8 @@ template = PromptTemplate(
 
 def reportGenerator(conversation_text):
     simple_chain = template | model | parser
+
+    
     result = simple_chain.invoke({
             "context":conversation_text
     })

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose.connect("mongodb+srv://veerendrasoni0555_db_user:jqSog0bK1VjOvsyk@cluster0.h0jmejb.mongodb.net/?appName=Cluster0");
+mongoose.connect("mongodb+srv://veerendrasoni0555_db_user:BxP0Dwy8YEzULcSy@cluster0.dtdh4cg.mongodb.net/?appName=Cluster0");
 
 const db = mongoose.connection;
 
