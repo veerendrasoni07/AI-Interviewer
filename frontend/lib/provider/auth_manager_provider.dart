@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:frontend/provider/user_provider.dart';
 import 'package:frontend/view/authentication/login_screen.dart';
+import 'package:get/get.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,7 +38,7 @@ class AuthManagerProvider extends StateNotifier<AuthStatus>{
     await prefs.clear();
     ref.read(userProvider.notifier).clearUser();
     state = AuthStatus.unauthenticated;
-    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>LoginScreen()), (route)=>false);
+    Get.offAll(() => const LoginScreen());
   }
 }
 

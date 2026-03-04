@@ -7,9 +7,14 @@ class ReportProvider extends StateNotifier<List<Report>> {
   void addReport(Report report) {
     state = [report, ...state];
   }
+
+  void setReport(List<Report> reports) {
+    state = reports;
+  }
 }
 
-final reportProvider =
-    StateNotifierProvider<ReportProvider, List<Report>>((ref) {
+final reportProvider = StateNotifierProvider<ReportProvider, List<Report>>((
+  ref,
+) {
   return ReportProvider();
 });

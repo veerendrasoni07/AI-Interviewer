@@ -3,8 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/controller/auth_controller.dart';
+import 'package:frontend/view/main_screen.dart';
 import 'package:frontend/view/authentication/login_screen.dart';
-import 'package:frontend/view/screens/home_screen.dart';
+import 'package:get/get.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -59,8 +60,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         context: context,
       );
       if(success){
-        Navigator.pop(context);
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+        Get.offAll(() => MainScreen());
       }
 
 
@@ -291,12 +294,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => LoginScreen(),
-                                  ),
-                                ),
+                                onPressed:
+                                    () => Get.to(() => const LoginScreen()),
                                 child: Text("Login"),
                               ),
                             ],

@@ -3,8 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/controller/auth_controller.dart';
+import 'package:frontend/view/main_screen.dart';
 import 'package:frontend/view/authentication/sign_up_screen.dart';
-import 'package:frontend/view/screens/home_screen.dart';
+import 'package:get/get.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -42,11 +43,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ref: ref,
       );
       if(success){
-        Navigator.pop(context);
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomeScreen()));
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
+        Get.offAll(() => MainScreen());
       }
       else{
-        Navigator.pop(context);
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password')),
         );
@@ -247,12 +252,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SignUpScreen(),
-                                  ),
-                                ),
+                                onPressed:
+                                    () => Get.to(() => const SignUpScreen()),
                                 child: Text("Signup"),
                               ),
                             ],

@@ -7,15 +7,15 @@ import 'package:frontend/view/screens/profile_screen.dart';
 import 'package:frontend/view/screens/session_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class MainScreen extends StatefulWidget {
-  MainScreen({super.key});
+class InnerMainScreen extends StatefulWidget {
+  InnerMainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<InnerMainScreen> createState() => _InnerMainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int selectedScreen = 0;
+class _InnerMainScreenState extends State<InnerMainScreen> {
+  int selectedScreen = 1;
 
   final screens = [
     HomeScreen(),
@@ -56,7 +56,6 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.transparent,
       body: screens[selectedScreen],
       bottomNavigationBar: SafeArea(child: _buildGlassNavBar()) ,
     );

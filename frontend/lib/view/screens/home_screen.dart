@@ -8,6 +8,7 @@ import 'package:frontend/provider/report_provider.dart';
 import 'package:frontend/provider/report_state.dart';
 import 'package:frontend/provider/user_provider.dart';
 import 'package:frontend/service/vapi_service.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vapi/vapi.dart';
 
@@ -203,6 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             final parallaxY = (_pointer.dy - 0.5) * 48;
 
             return Stack(
+              fit: StackFit.expand,
               children: [
                 _AnimatedBackdrop(
                   colors: activeGradient,
@@ -225,17 +227,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           key: const ValueKey<String>('idle'),
                           isNarrow: isNarrow,
                           onStart: () async {
-                            final navigator = Navigator.of(context);
-                            showDialog(
+                            Get.dialog(
+                              const Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFF1EDC75),
+                                ),
+                              ),
                               barrierDismissible: false,
-                              context: context,
-                              builder: (context) {
-                                return const Center(
-                                  child: CircularProgressIndicator(
-                                    color: Color(0xFF1EDC75),
-                                  ),
-                                );
-                              },
                             );
 
                             await startCall();
@@ -244,7 +242,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ref
                                   .read(interviewProvider.notifier)
                                   .startInterview();
-                              navigator.pop();
+                              if (Get.isDialogOpen ?? false) {
+                                Get.back();
+                              }
                             }
                           },
                         ),
@@ -471,9 +471,9 @@ class _IdleContent extends StatelessWidget {
           spacing: 10,
           runSpacing: 10,
           children: const [
-            _TechPill(label: 'Parallax UI'),
             _TechPill(label: 'Live Voice AI'),
-            _TechPill(label: 'Session Feedback'),
+            _TechPill(label: 'Live Feedback'),
+            _TechPill(label: 'Report Generation'),
           ],
         ),
         SizedBox(height: isNarrow ? 26 : 36),
