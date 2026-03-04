@@ -2,6 +2,10 @@
 import mongoose from "mongoose";
 
 const reportSchema = new mongoose.Schema({
+    userId:{
+        type:String,
+        required:true
+    },
     techStack:{
         type:String,
         required:true

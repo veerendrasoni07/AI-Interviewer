@@ -25,7 +25,7 @@ authRouter.post('/api/sign-up',async(req,res)=>{
             }
         );
         newUser = await newUser.save();
-        const token = jwt.sign({id:newUser._id},"superSecretKey");
+        const token = jwt.sign({id:newUser._id},process.env.TOKEN_SECRET_KEY);
         console.log("sign up successfully");
         // TODO : REMOVE PASSWORD FROM THE USER OBJECT
         res.status(200).json({user:newUser,token});

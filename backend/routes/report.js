@@ -1,5 +1,6 @@
 import express from 'express';
 import { spawn } from 'node:child_process';
+import auth from '../middleware/auth.js'
 import crypto from 'crypto';
 import { io } from '../service/socket.js';
 import Report from '../models/report.js';
@@ -38,6 +39,7 @@ reportRouter.post('/api/generate-report',async(req,res)=>{
             }
             const parsedReport = JSON.parse(reportData);
             const savedReport = await Report.create({
+                userId:userId,
                 techStack: parsedReport.techStack,
                 accuracy: parsedReport.accuracy,
                 communication:parsedReport.communication,
@@ -59,6 +61,17 @@ reportRouter.post('/api/generate-report',async(req,res)=>{
         res.status(500).json({error:"Internal Server Error"});
     }
 });
+
+reportRouter.get('/api/get-reports',auth,async(req,res)=>{
+    try {
+        const userId = req.user.id;
+        const reports = await Report.find({userId:userId});
+        res.status(200).json({reports:reports});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error:"Internal Server Error"});
+    }
+})
 
 
 
