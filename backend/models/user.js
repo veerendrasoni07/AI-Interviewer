@@ -1,6 +1,9 @@
 
 import mongoose from "mongoose";
 
+
+
+
 const userSchema = new mongoose.Schema({
   fullname: {
     type: String, 
@@ -26,9 +29,13 @@ const userSchema = new mongoose.Schema({
   phone:{
     type:Number 
   },
-  credit:{
+  credits:{
     type:Number,
     default:2
+  },
+  isPreminium:{
+    type:Boolean,
+    default:false
   }
 },{timestamps:true});
 

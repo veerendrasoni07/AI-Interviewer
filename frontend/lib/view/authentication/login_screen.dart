@@ -49,9 +49,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Get.offAll(() => MainScreen());
       }
       else{
-        if (Get.isDialogOpen ?? false) {
+
           Get.back();
-        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid email or password')),
         );

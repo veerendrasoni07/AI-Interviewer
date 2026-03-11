@@ -43,28 +43,26 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             colors: [Color(0xFF020A06), Color(0xFF042112), Color(0xFF0A3D24)],
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: reports.isEmpty
-                ? Center(
-                    child: Text(
-                      'No reports available yet.',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: const Color(0xFFD4FBE5),
-                        fontSize: 16,
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: reports.isEmpty
+              ? Center(
+                  child: Text(
+                    'No reports available yet.',
+                    style: GoogleFonts.spaceGrotesk(
+                      color: const Color(0xFFD4FBE5),
+                      fontSize: 16,
                     ),
-                  )
-                : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: reports.length,
-                    itemBuilder: (context, index) {
-                      final report = reports[index];
-                      return _ReportTile(report: report);
-                    },
                   ),
-          ),
+                )
+              : ListView.builder(
+                shrinkWrap: true,
+                itemCount: reports.length,
+                  itemBuilder: (context, index) {
+                    final report = reports[index];
+                    return _ReportTile(report: report);
+                  },
+                ),
         ),
       ),
     );

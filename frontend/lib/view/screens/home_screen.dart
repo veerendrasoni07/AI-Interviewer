@@ -116,51 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       });
       debugPrint('call ended');
     }
-
-    // if (event.label == 'message') {
-    //   final transcriptLine = _extractConversationLine(event.value);
-    //   if (transcriptLine != null && transcriptLine.isNotEmpty) {
-    //
-    //   }
-    //   debugPrint('Message: ${event.value}');
-    // }
   }
-
-  // String? _extractConversationLine(dynamic value) {
-  //   if (value is String) {
-  //     return value.trim();
-  //   }
-  //
-  //   if (value is Map<String, dynamic>) {
-  //     final role = value['role']?.toString();
-  //     final text =
-  //         value['transcript'] ??
-  //         value['message'] ??
-  //         value['content'] ??
-  //         value['text'];
-  //
-  //     String extractedText = '';
-  //     if (text is String) {
-  //       extractedText = text;
-  //     } else if (text is List) {
-  //       extractedText = text.map((item) => item.toString()).join(' ');
-  //     } else if (text is Map<String, dynamic>) {
-  //       extractedText = (text['text'] ?? text['content'] ?? '').toString();
-  //     }
-  //
-  //     extractedText = extractedText.trim();
-  //     if (extractedText.isEmpty) {
-  //       return null;
-  //     }
-  //
-  //     if (role != null && role.isNotEmpty) {
-  //       return '$role: $extractedText';
-  //     }
-  //     return extractedText;
-  //   }
-  //
-  //   return null;
-  // }
 
   Future<void> stopCall() async {
     if (currCall == null) {
@@ -183,6 +139,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final interviewState = ref.watch(interviewProvider);
     final activeGradient = _gradientForState(interviewState);
+    final user = ref.read(userProvider);
     final reportStatus = ref.watch(reportState);
     final reports = ref.watch(reportProvider);
     final latestReport = reports.isNotEmpty ? reports.first : null;
@@ -211,6 +168,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   parallaxX: parallaxX,
                   parallaxY: parallaxY,
                 ),
+
+                Positioned(
+                  left: MediaQuery.of(context).size.width * 0.05,
+                  top: MediaQuery.of(context).size.height * 0.05,
+                  child: Container(
+                    padding:EdgeInsets.symmetric(vertical: 8,horizontal: 8),
+                    margin:EdgeInsets.symmetric(vertical: 8,horizontal: 8) ,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: (user?.isPremium ?? false) ?  const [Color(0xFF0C6538), Color(0xFF1BD877)] :  [Colors.grey.shade900, Colors.white70] ) ,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Text("Upload Resume",style: GoogleFonts.spaceGrotesk(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),),
+                        SizedBox(width: 10,),
+                        Icon(user?.isPremium ?? false ?  Icons.upload_file_outlined : Icons.lock ,color: Colors.white,)
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: MediaQuery.of(context).size.width * 0.05,
+                  top: MediaQuery.of(context).size.height * 0.05,
+                  child: Container(
+                    padding:EdgeInsets.symmetric(vertical: 8,horizontal: 8),
+                    margin:EdgeInsets.symmetric(vertical: 8,horizontal: 8) ,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors:   const [Color(0xFF0C6538), Color(0xFF1BD877)]),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text("Credits:${user?.credits ?? 0}",style: GoogleFonts.spaceGrotesk(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),),
+                  ),
+                ),
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
@@ -227,24 +225,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           key: const ValueKey<String>('idle'),
                           isNarrow: isNarrow,
                           onStart: () async {
-                            Get.dialog(
-                              const Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF1EDC75),
+                            if (user!.credits != 0) {
+                              Get.dialog(
+                                const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF1EDC75),
+                                  ),
                                 ),
-                              ),
-                              barrierDismissible: false,
-                            );
+                                barrierDismissible: false,
+                              );
 
-                            await startCall();
+                              await startCall();
 
-                            if (mounted) {
-                              ref
-                                  .read(interviewProvider.notifier)
-                                  .startInterview();
-                              if (Get.isDialogOpen ?? false) {
-                                Get.back();
+                              if (mounted) {
+                                ref
+                                    .read(interviewProvider.notifier)
+                                    .startInterview();
+                                if (Get.isDialogOpen ?? false) {
+                                  Get.back();
+                                }
                               }
+                            } else {
+                              Get.dialog(
+                                 Column(
+                                  children: [
+                                    Text("Sorry you are out of credits!",style: GoogleFonts.orbitron(fontSize: 24,color: Colors.white,fontWeight: FontWeight.w700),),
+                                    Center(child: ElevatedButton(onPressed: (){},style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                    ), child: Text("Buy Credits")),)
+                                  ],
+                                )
+                              );
                             }
                           },
                         ),
@@ -432,7 +443,7 @@ class _ParallaxOrb extends StatelessWidget {
   }
 }
 
-class _IdleContent extends StatelessWidget {
+class _IdleContent extends ConsumerWidget {
   const _IdleContent({
     super.key,
     required this.isNarrow,
@@ -443,7 +454,8 @@ class _IdleContent extends StatelessWidget {
   final Future<void> Function() onStart;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,WidgetRef ref) {
+    final user = ref.read(userProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -478,14 +490,14 @@ class _IdleContent extends StatelessWidget {
         ),
         SizedBox(height: isNarrow ? 26 : 36),
         GestureDetector(
-          onTap: onStart,
+          onTap: (user?.credits == 0 ) ? onStart : (){},
           child: Container(
             width: isNarrow ? double.infinity : 280,
             height: 58,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0D7E44), Color(0xFF23E07A)],
+              gradient:  LinearGradient(
+                colors: (user?.credits == 0 ) ?  [Colors.grey.shade900, Colors.white70]  : [Color(0xFF0D7E44), Color(0xFF23E07A)],
               ),
               boxShadow: const [
                 BoxShadow(
@@ -757,7 +769,11 @@ class _EndedContent extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
-                colors: reportStatus == ReportState.beforeGenerating || reportStatus == ReportState.generating ? const [Color(0xFF0C6538), Color(0xFF1BD877)] :  [Colors.grey.shade800,Colors.grey.shade400],
+                colors:
+                    reportStatus == ReportState.beforeGenerating ||
+                        reportStatus == ReportState.generating
+                    ? const [Color(0xFF0C6538), Color(0xFF1BD877)]
+                    : [Colors.grey.shade800, Colors.grey.shade400],
               ),
             ),
             child: Center(

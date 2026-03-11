@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/provider/auth_manager_provider.dart';
+import 'package:frontend/provider/report_provider.dart';
 import 'package:frontend/provider/user_provider.dart';
 import 'package:frontend/view/inner_nav_screen/inner_main_screen.dart';
 import 'package:get/get.dart';
@@ -15,16 +17,13 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final String fullName = 'Alex Johnson';
-  final String email = 'alex.johnson@example.com';
-  final int reportsGenerated = 24;
-  final int creditsLeft = 8;
+
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.watch(userProvider);
-
+    final reports = ref.watch(reportProvider.notifier).totalReports;
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
@@ -36,7 +35,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              ref.read(authManagerProvider.notifier).logout(context: context);
+            },
             icon: Icon(Icons.logout, color: Colors.white),
           ),
         ],
@@ -117,7 +118,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: _InfoCard(
                               title: 'Reports Generated',
-                              value: '$reportsGenerated',
+                              value: '$reports',
                               icon: CupertinoIcons.doc_text_fill,
                             ),
                           ),
@@ -125,7 +126,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: _InfoCard(
                               title: 'Credits Left',
-                              value: '$creditsLeft',
+                              value: '${user.credits}',
                               icon: CupertinoIcons.creditcard_fill,
                             ),
                           ),

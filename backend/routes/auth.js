@@ -39,7 +39,10 @@ authRouter.post('/api/sign-up',async(req,res)=>{
 authRouter.post('/api/sign-in',async(req,res)=>{
     try {
         console.log("Sign in api request");
+        
         const {email,password} = req.body;
+        console.log(email);
+        console.log(password);
         if(!email || !password){
             return res.status(400).json({msg:"email or password is missing"});
         }

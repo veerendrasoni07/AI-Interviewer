@@ -11,6 +11,8 @@ class ReportProvider extends StateNotifier<List<Report>> {
   void setReport(List<Report> reports) {
     state = reports;
   }
+  int get totalReports => state.length;
+
 }
 
 final reportProvider = StateNotifierProvider<ReportProvider, List<Report>>((
