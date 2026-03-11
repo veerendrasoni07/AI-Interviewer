@@ -28,6 +28,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   String buttonText = 'Start Interview';
   bool isLoading = false;
   bool isCallStarted = false;
+  Timer? _interviewTimer;
+  int _remainingSeconds = 0;
 
   final VapiService vapiService = VapiService.instance;
   final VapiClient vapi = VapiClient('4e70a746-fd7c-4c9a-9e1f-e5354afc9e3d');
@@ -54,11 +56,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  @override
+  void dispose() {
+    _stopInterviewTimer();
+    super.dispose();
+  }
+
+  void _startInterviewTimer({required bool isPremium}) {
+    _interviewTimer?.cancel();
+    final totalSeconds = (isPremium ? 20 : 5) * 60;
+    setState(() {
+      _remainingSeconds = totalSeconds;
+    });
+
+    _interviewTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_remainingSeconds <= 1) {
+        timer.cancel();
+        setState(() {
+          _remainingSeconds = 0;
+        });
+        await stopCall();
+        return;
+      }
+      setState(() {
+        _remainingSeconds -= 1;
+      });
+    });
+  }
+
+  void _stopInterviewTimer() {
+    _interviewTimer?.cancel();
+    _interviewTimer = null;
+  }
+
   Future<void> startCall() async {
     // _conversationLines.clear();
     // _lastConversation = '';
+    ref.read(userProvider.notifier).creditChange();
     ref.read(reportState.notifier).reset();
     final user = ref.read(userProvider);
+
     final call = await vapi.start(
       assistantId: '6129f7cc-ca0d-4540-b8ba-9a74fba80603',
       assistantOverrides: {
@@ -73,6 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       currCall!.onEvent.listen(_handleCallEvents);
       isCallStarted = true;
       ref.read(interviewProvider.notifier).startInterview();
+      _startInterviewTimer(isPremium: user.isPremium);
     });
   }
 
@@ -114,6 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         isCallStarted = false;
         currCall = null;
       });
+      _stopInterviewTimer();
       debugPrint('call ended');
     }
   }
@@ -133,13 +176,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       isCallStarted = false;
       ref.read(interviewProvider.notifier).stopInterview();
     });
+    _stopInterviewTimer();
   }
 
   @override
   Widget build(BuildContext context) {
     final interviewState = ref.watch(interviewProvider);
     final activeGradient = _gradientForState(interviewState);
-    final user = ref.read(userProvider);
+    final user = ref.watch(userProvider);
     final reportStatus = ref.watch(reportState);
     final reports = ref.watch(reportProvider);
     final latestReport = reports.isNotEmpty ? reports.first : null;
@@ -169,44 +213,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   parallaxY: parallaxY,
                 ),
 
-                Positioned(
+                interviewState == InterviewState.started ? SizedBox.shrink() : Positioned(
                   left: MediaQuery.of(context).size.width * 0.05,
                   top: MediaQuery.of(context).size.height * 0.05,
                   child: Container(
-                    padding:EdgeInsets.symmetric(vertical: 8,horizontal: 8),
-                    margin:EdgeInsets.symmetric(vertical: 8,horizontal: 8) ,
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: (user?.isPremium ?? false) ?  const [Color(0xFF0C6538), Color(0xFF1BD877)] :  [Colors.grey.shade900, Colors.white70] ) ,
+                      gradient: LinearGradient(
+                        colors: (user?.isPremium ?? false)
+                            ? const [Color(0xFF0C6538), Color(0xFF1BD877)]
+                            : [Colors.grey.shade900, Colors.white70],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        Text("Upload Resume",style: GoogleFonts.spaceGrotesk(
+                        Text(
+                          "Upload Resume",
+                          style: GoogleFonts.spaceGrotesk(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Icon(
+                          user?.isPremium ?? false
+                              ? Icons.upload_file_outlined
+                              : Icons.lock,
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),),
-                        SizedBox(width: 10,),
-                        Icon(user?.isPremium ?? false ?  Icons.upload_file_outlined : Icons.lock ,color: Colors.white,)
+                        ),
                       ],
                     ),
                   ),
                 ),
-                Positioned(
+                interviewState == InterviewState.started ? SizedBox.shrink() : Positioned(
                   right: MediaQuery.of(context).size.width * 0.05,
                   top: MediaQuery.of(context).size.height * 0.05,
                   child: Container(
-                    padding:EdgeInsets.symmetric(vertical: 8,horizontal: 8),
-                    margin:EdgeInsets.symmetric(vertical: 8,horizontal: 8) ,
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors:   const [Color(0xFF0C6538), Color(0xFF1BD877)]),
+                      gradient: LinearGradient(
+                        colors: const [Color(0xFF0C6538), Color(0xFF1BD877)],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text("Credits:${user?.credits ?? 0}",style: GoogleFonts.spaceGrotesk(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),),
+                    child: Text(
+                      "Credits:${user?.credits ?? 0}",
+                      style: GoogleFonts.spaceGrotesk(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned.fill(
@@ -247,14 +308,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               }
                             } else {
                               Get.dialog(
-                                 Column(
+                                Column(
                                   children: [
-                                    Text("Sorry you are out of credits!",style: GoogleFonts.orbitron(fontSize: 24,color: Colors.white,fontWeight: FontWeight.w700),),
-                                    Center(child: ElevatedButton(onPressed: (){},style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                    ), child: Text("Buy Credits")),)
+                                    Text(
+                                      "Sorry you are out of credits!",
+                                      style: GoogleFonts.orbitron(
+                                        fontSize: 24,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Center(
+                                      child: ElevatedButton(
+                                        onPressed: () {},
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                        ),
+                                        child: Text("Buy Credits"),
+                                      ),
+                                    ),
                                   ],
-                                )
+                                ),
                               );
                             }
                           },
@@ -269,6 +343,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           key: const ValueKey<String>('started'),
                           currentSpeaker: currentSpeaker,
                           isNarrow: isNarrow,
+                          remainingSeconds: _remainingSeconds,
+                          isPremium: user?.isPremium ?? false,
                           onEndCall: () async {
                             await stopCall();
                           },
@@ -454,8 +530,8 @@ class _IdleContent extends ConsumerWidget {
   final Future<void> Function() onStart;
 
   @override
-  Widget build(BuildContext context,WidgetRef ref) {
-    final user = ref.read(userProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -490,14 +566,16 @@ class _IdleContent extends ConsumerWidget {
         ),
         SizedBox(height: isNarrow ? 26 : 36),
         GestureDetector(
-          onTap: (user?.credits == 0 ) ? onStart : (){},
+          onTap: (user?.credits == 0) ? () {} : onStart,
           child: Container(
             width: isNarrow ? double.infinity : 280,
             height: 58,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              gradient:  LinearGradient(
-                colors: (user?.credits == 0 ) ?  [Colors.grey.shade900, Colors.white70]  : [Color(0xFF0D7E44), Color(0xFF23E07A)],
+              gradient: LinearGradient(
+                colors: (user?.credits == 0)
+                    ? [Colors.grey.shade900, Colors.white70]
+                    : [Color(0xFF0D7E44), Color(0xFF23E07A)],
               ),
               boxShadow: const [
                 BoxShadow(
@@ -558,12 +636,22 @@ class _InCallContent extends StatelessWidget {
     super.key,
     required this.currentSpeaker,
     required this.isNarrow,
+    required this.remainingSeconds,
+    required this.isPremium,
     required this.onEndCall,
   });
 
   final Speaker currentSpeaker;
   final bool isNarrow;
+  final int remainingSeconds;
+  final bool isPremium;
   final Future<void> Function() onEndCall;
+
+  String _formatTime(int totalSeconds) {
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -591,6 +679,33 @@ class _InCallContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 26),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              colors: isPremium
+                  ? const [Color(0xFF0C6538), Color(0xFF1BD877)]
+                  : [Colors.grey.shade900, Colors.white70],
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x6612CC6A),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Text(
+            'Time Left ${_formatTime(remainingSeconds)}',
+            style: GoogleFonts.spaceGrotesk(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: isNarrow ? 14 : 16,
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
         VoiceBubble(color: pulseColor),
         const SizedBox(height: 20),
         Text(

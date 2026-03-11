@@ -12,6 +12,24 @@ class User {
 
   User({required this.id, required this.email, required this.fullname, required this.phone, required this.credits, required this.isPremium});
 
+  User copyWith({
+    String? id,
+    String? email,
+    String? fullname,
+    String? phone,
+    int? credits,
+    bool? isPremium,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      fullname: fullname ?? this.fullname,
+      phone: phone ?? this.phone,
+      credits: credits ?? this.credits,
+      isPremium: isPremium ?? this.isPremium,
+    );
+  }
+
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
